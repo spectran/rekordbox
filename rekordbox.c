@@ -28,8 +28,10 @@ extern FIL MyFile;     /* File object */
 extern uint8_t buffer[8192];
 extern uint16_t bytesread;
 
+static uint8_t FindToken (char *token);
+
 // finds section token in the file. 0 - token is found, 1 - end of file
-uint8_t FindToken (char *token) {
+static uint8_t FindToken (char *token) {
 	f_lseek(&MyFile, 0); // search from the beginning
 	do {
 		do {
