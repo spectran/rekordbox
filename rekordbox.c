@@ -13,6 +13,8 @@ char wave_token[5] = "PWAV";
 char wv2_token[5] = "PWV2";
 char wv3_token[5] = "PWV3";
 char cob_token[5] = "PCOB";
+char path_token[5] = "PPTH";
+char qtz_token[5] = "PQTZ";
 
 char tag[5];
 extern uint32_t i;
