@@ -28,19 +28,47 @@ extern FIL MyFile;     /* File object */
 extern uint8_t buffer[8192];
 extern uint16_t bytesread;
 
+// finds section token in the file. 0 - token is found, 1 - end of file
+uint8_t FindToken (char *token) {
+	f_lseek(&MyFile, 0); // search from the beginning
+	do {
+		do {
+			while(f_read(&MyFile, &tag[0], 1, (void *)&bytesread) != FR_OK);
+		}
+		while(tag[0] != 'P');
+		while(f_read(&MyFile, &tag[1], 3, (void *)&bytesread) != FR_OK);
+		tag[4] = '\0';
+	}
+	while(strcmp(tag, token) != 0);
+	if(f_eof(&MyFile) == 1) return 1;
+	return 0;
+}
+
 void DecodeRekordboxFiles () {
+	uint32_t data_size = 0;
 	if(f_open(&MyFile, "ANLZ0000.DAT", FA_READ) == FR_OK)
 	{
-		do {
-			do {
-				while(f_read(&MyFile, &tag[0], 1, (void *)&bytesread) != FR_OK);
-			}
-			while(tag[0] != 'P');
-			while(f_read(&MyFile, &tag[1], 3, (void *)&bytesread) != FR_OK);
-			tag[4] = '\0';
+		if(FindToken(path_token) != 0) break;
+		while(f_read(&MyFile, &buffer, 8, (void *)&bytesread) != FR_OK); // dummy read 8 bytes
+		for(i=0; i<4; i++) {
+			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
+			data_size |= tag[i];
+			data_size <<= 8;
 		}
-		while((strcmp(tag, wave_token) != 0) && (f_eof(&MyFile) == 0));
-
+		data_size >>= 8;
+		while(f_read(&MyFile, rekordbox.filename, data_size, (void *)&bytesread) != FR_OK);
+		
+		if(FindToken(qtz_token) != 0) break;
+		while(f_read(&MyFile, &buffer, 16, (void *)&bytesread) != FR_OK); // dummy read 16 bytes
+		for(i=0; i<4; i++) {
+			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
+			rekordbox.timezones |= tag[i];
+			rekordbox.timezones <<= 8;
+		}
+		rekordbox.timezones >>= 8;
+		//while(f_read(&MyFile, rekordbox.timezones, data_size, (void *)&bytesread) != FR_OK);
+		
+		if(FindToken(wave_token) != 0) break;
 		while(f_read(&MyFile, &buffer, 8, (void *)&bytesread) != FR_OK); // dummy read 8 bytes
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
@@ -50,19 +78,12 @@ void DecodeRekordboxFiles () {
 		rekordbox.lowp_spectrum_size >>= 8;
 		while(f_read(&MyFile, &buffer, 4, (void *)&bytesread) != FR_OK); // dummy read 4 bytes
 		while(f_read(&MyFile, lowp_wavebuffer, rekordbox.lowp_spectrum_size, (void *)&bytesread) != FR_OK);
+		
 		f_close(&MyFile);
 	}
 	if(f_open(&MyFile, "ANLZ0000.EXT", FA_READ) == FR_OK)
 	{
-		do {
-			do {
-				while(f_read(&MyFile, &tag[0], 1, (void *)&bytesread) != FR_OK);
-			}
-			while(tag[0] != 'P');
-			while(f_read(&MyFile, &tag[1], 3, (void *)&bytesread) != FR_OK);
-			tag[4] = '\0';
-		}
-		while((strcmp(tag, wv3_token) != 0) && (f_eof(&MyFile) == 0));
+		if(FindToken(wv3_token) != 0) break;
 		while(f_read(&MyFile, &buffer, 12, (void *)&bytesread) != FR_OK);
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
