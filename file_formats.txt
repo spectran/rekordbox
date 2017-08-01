@@ -1,0 +1,112 @@
+file.DAT
+--------
+/numbers are all big endian/
+[tag]   - 4 byte string
+4byte   - tag header size 
+4byte   - segment size (including tag header)
+(in multibit fields, msb-to-lsb (left-to-right) is the general direction)
+//////////////////////////////
+
+PMAI    - main file descriptor
+4byte   - head size (28)
+4byte   - total file size
+4byte   - ??? (1)
+4byte   - ??? (65536)
+4byte   - ??? (65536)
+4byte   - ??? (0)
+
+PPTH    - file path
+4byte   - head size (16)
+4byte   - tag size
+4byte   - data length
+data_bytes - file path in UTF16 (big endian) \0 terminated
+
+PVBR    - VBR seek table
+4byte   - head size (16)
+4byte   - tag size (1620) (4*400+4)
+4byte   - 0
+  >entries>
+    4byte   - file pos
+  >last_entry>
+    4byte   - ???
+
+PQTZ    - Quantized time zones
+4byte   - head size (24)
+4byte   - tag size
+4byte   - 0
+4byte   - ??? (524288=0x80000)
+4byte   - number of entries
+  >entries>
+    2byte   - beat phase (1-2-3-4)
+    2byte   - bpm*100
+    4byte   - time index (msec)
+
+PWAV    - Low resolution Wave display data (5+3bit)
+4byte   - head size (20)
+4byte   - tag size (420)
+4byte   - data size (400)
+4byte   - ??? (65536)
+  >entries>
+     3bit   - color index
+     5bit   - height
+
+PWV2    - Lowest resolution Wave display data (4bit)
+4byte   - head size (20)
+4byte   - tag size (120)
+4byte   - data size (100)
+4byte   - ??? (65536)
+  >entries>
+      4bit  - 0
+      4bit  - height
+
+PCOB    - CUE Object    ///first PCOB for hot cues, second PCOB for memory
+                        ///only generated for USB storage, 
+                        ///otherwise contains only dummy data and actual cue data stored in the edb 
+4byte   - head size (24)
+4byte   - tag size
+4byte   - hotCUE? (1=hot cue, 0=memory)
+4byte   - number of cue points
+4byte   - memories (-1= hot cue)
+  >entry tags>
+    PCPT    - CUE Point
+    4byte   - head size (28)
+    4byte   - tag size (56)
+    4byte   - hot cue no#, 0 otherwise
+    4byte   - active (0=inactive / 4=active)
+    4byte   - (65536)
+    4byte   - ???? -----point type: 0xffff ffff = hot cue ////  memory first: 0xffff xxxxx ----- memory last: 0x xxxx ffff
+      >datas>
+        1byte   - cue type 1 = single / 2 = loop
+        1byte   - 0
+        2byte   - ??? (1000)
+        4byte   - start time (msec)
+        4byte   - loop end (-1 if not used)
+        16byte  - 0
+
+
+
+file.EXT
+--------
+PMAI    - main file descriptor
+4byte   - head size (28)
+4byte   - total file size
+4byte   - ??? (1)
+4byte   - ??? (65536)
+4byte   - ??? (65536)
+4byte   - ??? (0)
+
+PPTH    - file path
+4byte   - head size (16)
+4byte   - tag size
+4byte   - data length
+data_bytes - file path in UTF16 (big endian) \0 terminated
+
+PWV3    - High resolution Wave display data
+4byte   - head size (24)
+4byte   - tag size
+4byte   - ??? (1)
+4byte   - data size
+4byte   - ??? (0x0096 0000)
+  >entries>
+      3bit  - color 
+      5bit  - height
