@@ -16,6 +16,6 @@ typedef struct
 	uint32_t spectrum_size;
 }RekordboxTypeDef;
 
-void DecodeRekordboxFiles ();
+uint8_t DecodeRekordboxFiles (char *folder);
 
 #endif /* REKORDBOX_H_ */
