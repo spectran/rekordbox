@@ -48,6 +48,7 @@ static uint8_t FindToken (char *token) {
 
 uint8_t DecodeRekordboxFiles (char *folder) {
 	uint32_t data_size = 0;
+	if(f_opendir(folder, 0) {
 	if(f_open(&MyFile, "ANLZ0000.DAT", FA_READ) == FR_OK)
 	{
 		if(FindToken(path_token) != 0) return 1;
@@ -96,6 +97,7 @@ uint8_t DecodeRekordboxFiles (char *folder) {
 		while(f_read(&MyFile, &buffer, 4, (void *)&bytesread) != FR_OK); // dummy read 4 bytes
 		while(f_read(&MyFile, wavebuffer, rekordbox.spectrum_size, (void *)&bytesread) != FR_OK);
 		f_close(&MyFile);
+	}
 	}
 	return 0;
 }
