@@ -46,11 +46,11 @@ static uint8_t FindToken (char *token) {
 	return 0;
 }
 
-void DecodeRekordboxFiles () {
+uint8_t DecodeRekordboxFiles (char *folder) {
 	uint32_t data_size = 0;
 	if(f_open(&MyFile, "ANLZ0000.DAT", FA_READ) == FR_OK)
 	{
-		if(FindToken(path_token) != 0) break;
+		if(FindToken(path_token) != 0) return 1;
 		while(f_read(&MyFile, &buffer, 8, (void *)&bytesread) != FR_OK); // dummy read 8 bytes
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
@@ -60,7 +60,7 @@ void DecodeRekordboxFiles () {
 		data_size >>= 8;
 		while(f_read(&MyFile, rekordbox.filename, data_size, (void *)&bytesread) != FR_OK);
 		
-		if(FindToken(qtz_token) != 0) break;
+		if(FindToken(qtz_token) != 0) return 1;
 		while(f_read(&MyFile, &buffer, 16, (void *)&bytesread) != FR_OK); // dummy read 16 bytes
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
@@ -70,7 +70,7 @@ void DecodeRekordboxFiles () {
 		rekordbox.timezones >>= 8;
 		//while(f_read(&MyFile, rekordbox.timezones, data_size, (void *)&bytesread) != FR_OK);
 		
-		if(FindToken(wave_token) != 0) break;
+		if(FindToken(wave_token) != 0) return 1;
 		while(f_read(&MyFile, &buffer, 8, (void *)&bytesread) != FR_OK); // dummy read 8 bytes
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
@@ -85,7 +85,7 @@ void DecodeRekordboxFiles () {
 	}
 	if(f_open(&MyFile, "ANLZ0000.EXT", FA_READ) == FR_OK)
 	{
-		if(FindToken(wv3_token) != 0) break;
+		if(FindToken(wv3_token) != 0) return 1;
 		while(f_read(&MyFile, &buffer, 12, (void *)&bytesread) != FR_OK);
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
@@ -97,4 +97,5 @@ void DecodeRekordboxFiles () {
 		while(f_read(&MyFile, wavebuffer, rekordbox.spectrum_size, (void *)&bytesread) != FR_OK);
 		f_close(&MyFile);
 	}
+	return 0;
 }
