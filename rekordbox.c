@@ -5,7 +5,7 @@
  *      Author: Spectran
  */
 
-#include "ff.h"
+#include "fatfs.h"
 #include "rekordbox.h"
 #include <string.h>
 
@@ -17,16 +17,15 @@ char path_token[5] = "PPTH";
 char qtz_token[5] = "PQTZ";
 
 char tag[5];
-extern uint32_t i;
 
-extern uint8_t *lowp_wavebuffer;
-extern uint8_t *wavebuffer;
+extern uint8_t lowp_wavebuffer[400];
+extern uint8_t wavebuffer[60000];
 
 RekordboxTypeDef rekordbox;
 
 extern FIL MyFile;     /* File object */
-extern uint8_t buffer[8192];
-extern uint16_t bytesread;
+extern uint8_t g_Mp3InBuffer[4096];
+extern uint32_t bytesread;
 
 static uint8_t FindToken (char *token);
 
@@ -46,58 +45,59 @@ static uint8_t FindToken (char *token) {
 	return 0;
 }
 
-uint8_t DecodeRekordboxFiles (char *folder) {
+uint8_t DecodeRekordboxFiles (char *name) {
 	uint32_t data_size = 0;
-	if(f_opendir(folder, 0) {
-	if(f_open(&MyFile, "ANLZ0000.DAT", FA_READ) == FR_OK)
+	uint8_t k;
+	uint32_t i;
+	uint8_t res = FR_OK;
+	res = f_open(&MyFile, "ANLZ0000.DAT", FA_READ);
+	if(res == FR_OK)
 	{
 		if(FindToken(path_token) != 0) return 1;
-		while(f_read(&MyFile, &buffer, 8, (void *)&bytesread) != FR_OK); // dummy read 8 bytes
+		while(f_read(&MyFile, &g_Mp3InBuffer, 8, (void *)&bytesread) != FR_OK); // dummy read 8 bytes
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
 			data_size |= tag[i];
 			data_size <<= 8;
 		}
 		data_size >>= 8;
-		while(f_read(&MyFile, rekordbox.filename, data_size, (void *)&bytesread) != FR_OK);
-		
-		if(FindToken(qtz_token) != 0) return 1;
-		while(f_read(&MyFile, &buffer, 16, (void *)&bytesread) != FR_OK); // dummy read 16 bytes
-		for(i=0; i<4; i++) {
-			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
-			rekordbox.timezones |= tag[i];
-			rekordbox.timezones <<= 8;
+		while(f_read(&MyFile, &rekordbox.filename[0], data_size, (void *)&bytesread) != FR_OK);
+		i = 0;
+		k = 0;
+		while(i < data_size)
+		{
+			if(rekordbox.filename[i] != '\0') {
+				rekordbox.filename[k] = rekordbox.filename[i];
+				k++;
+			}
+			i++;
 		}
-		rekordbox.timezones >>= 8;
-		//while(f_read(&MyFile, rekordbox.timezones, data_size, (void *)&bytesread) != FR_OK);
-		
 		if(FindToken(wave_token) != 0) return 1;
-		while(f_read(&MyFile, &buffer, 8, (void *)&bytesread) != FR_OK); // dummy read 8 bytes
+		while(f_read(&MyFile, &g_Mp3InBuffer, 8, (void *)&bytesread) != FR_OK); // dummy read 8 bytes
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
 			rekordbox.lowp_spectrum_size |= tag[i];
 			rekordbox.lowp_spectrum_size <<= 8;
 		}
 		rekordbox.lowp_spectrum_size >>= 8;
-		while(f_read(&MyFile, &buffer, 4, (void *)&bytesread) != FR_OK); // dummy read 4 bytes
-		while(f_read(&MyFile, lowp_wavebuffer, rekordbox.lowp_spectrum_size, (void *)&bytesread) != FR_OK);
-		
+		while(f_read(&MyFile, &g_Mp3InBuffer, 4, (void *)&bytesread) != FR_OK); // dummy read 4 bytes
+		while(f_read(&MyFile, &lowp_wavebuffer, rekordbox.lowp_spectrum_size, (void *)&bytesread) != FR_OK);
 		f_close(&MyFile);
 	}
 	if(f_open(&MyFile, "ANLZ0000.EXT", FA_READ) == FR_OK)
 	{
 		if(FindToken(wv3_token) != 0) return 1;
-		while(f_read(&MyFile, &buffer, 12, (void *)&bytesread) != FR_OK);
+		while(f_read(&MyFile, &g_Mp3InBuffer, 12, (void *)&bytesread) != FR_OK);
 		for(i=0; i<4; i++) {
 			while(f_read(&MyFile, &tag[i], 1, (void *)&bytesread) != FR_OK);
 			rekordbox.spectrum_size |= tag[i];
 			rekordbox.spectrum_size <<= 8;
 		}
 		rekordbox.spectrum_size >>= 8;
-		while(f_read(&MyFile, &buffer, 4, (void *)&bytesread) != FR_OK); // dummy read 4 bytes
-		while(f_read(&MyFile, wavebuffer, rekordbox.spectrum_size, (void *)&bytesread) != FR_OK);
+		while(f_read(&MyFile, &g_Mp3InBuffer, 4, (void *)&bytesread) != FR_OK); // dummy read 4 bytes
+		while(f_read(&MyFile, &wavebuffer, rekordbox.spectrum_size, (void *)&bytesread) != FR_OK);
+		for(i=0; i<280; i++) wavebuffer[rekordbox.spectrum_size+i] = 0;
 		f_close(&MyFile);
-	}
 	}
 	return 0;
 }
